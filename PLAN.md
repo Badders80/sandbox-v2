@@ -180,7 +180,17 @@ Do these in order. Stop at the end of a step if something in the outcome does no
    - Stake calculation throws if `stake % step !== 0`. Required step argument, no default.
    - Refund text contract: asserts exact sentence from `OUTCOME.md § Refund` and regex fails on any day count (`/\d+\s+days?/i`).
 4. DSL page on the engine. Create, edit, and view. Horse, trainer, and owner are written from that page. They do not get their own screens. A registered horse loads from a loveracing.nz link, then the operator confirms and fills the soft slots. An unregistered horse is typed by hand and cannot be published past Coming Soon. Branding fields from the page are not stored.
-5. New R2 bucket, once the Cloudflare token in "Accounts" is present. Public images only, for the horses that go through this flow. Minimum three images before a DSL can be Available. `image_count` is the only image fact in the database. Private KYC and proof-of-address files stay in Supabase Storage, not R2.
+5. New R2 bucket configuration:
+   - **Production Bucket**: `evolution-v2-horse-images`
+   - **File Structure**: `{horse-slug}/{image-number}` (e.g., `lady-ketchikan/01`)
+   - **Access**: Public read for horse images, private write
+   - **Requirements**: Minimum three images before a DSL can be Available
+   - **Database**: Only `image_count` is stored - no image paths
+   - **Fallback**: If R2 access is delayed, use Supabase Storage temporarily
+   
+   Public images only, for the horses that go through this flow. `image_count` is the only image fact in the database. Private KYC and proof-of-address files stay in Supabase Storage, not R2.
+   
+   **Configuration**: See `/r2-config/README.md` for full setup details and access patterns.
 6. Website reads the rows. The landing page is already built, per "How the build session behaves". This step is the marketplace and the horse listing, with the search layer in "Search" above. Press, updates, and the FAQ do not live on the horse, trainer, or owner. Coming Soon is visible and cannot be bought. Available means Buy Now. Unpublished stays off the marketplace and out of the sitemap.
 7. Compiler, against the legal authority above. Copy the PDF, the three pro-formas, and the principles note into the repo as the read-only reference set. PDS reads the horse soft text columns (`about_horse`, `racing_outlook_and_pedigree`, `race_expectation`), the trainer bio, and the DSL terms. Strictly forbid filesystem content scans or frontmatter lookups. SA reads hard facts and commercial terms, no soft prose. Promoter line on every document: Alex Baddeley, Evolution Stables Ltd. Payment default, prize freeze, and forfeiture are printed procedures. A system that runs them is not part of this outcome. The self-audit checks both documents against the principles note.
 8. Purchase, per "Buy workflow" above. Logged-in buyer. The website modal asks the engine for the PDS and SA compiled with the account name. Buyer accepts. Engine starts Stripe Identity if the account is not verified, and records the result on the account. Engine creates Checkout and returns the URL. Webhook writes the sale: stake, amount, Stripe session id, Identity id, both documents, both hashes. A later edit to the horse does not change a document already sold. Browser returns to MyStable. MyStable reads that account and that user's sales. Checkout does not create another profile. Do not import `sandbox/rebuild`.
