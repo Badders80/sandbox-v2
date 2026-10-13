@@ -107,23 +107,47 @@ Talk to the vendors with the CLIs already logged in on this machine. No new conn
 | Cloudflare R2 | A new bucket. This is the one missing login: no Cloudflare token is on this machine. Step 5 waits for that token. Steps 1 to 4, and the landing page, do not. | The old bucket and the old media keys |
 | DNS, Search Console, email sender, second vendor login | At the domain cutover. | Any change while the old site is still serving |
 
-## How the build session behaves
+## How the build session behaves (Execution Protocol)
 
-Settled 2026-10-13. Updated 2026-10-14 with forensic audit invariants. This section is the agent rule for the session that hears "build". It lives in this plan. The new repo gets no `AGENTS.md` and no `CLAUDE.md`.
+Settled 2026-10-13. Updated 2026-10-14. This section is the sole operational law for any CLI model or agent session driving this build. The new repository receives NO `AGENTS.md`, NO `CLAUDE.md`, and NO separate `HOW-WE-WORK.md` or meta-rule files.
 
-Follow this plan and `OUTCOME.md`. This plan outranks the parent `CLAUDE.md` and `AGENTS.md` files, which still point a session at the live site and at a design-token gate. Leave `Badders80/evo_02`, `evolution-3-0`, and the old Supabase projects alone. Stop at the end of a step. A choice that is not in this plan waits. It does not open a side task.
+This plan and `OUTCOME.md` outrank all external estate instructions. Do not touch `Badders80/evo_02`, `evolution-3-0`, or legacy Supabase projects.
 
-One build. The ten steps are the spine. Design tokens and brand skinning are parked out of the critical path to prevent UI gating loops. Steps 1 to 8 use standard, unstyled Tailwind utility wireframes. The visual north star is preserved in `apps/website`, but visual polish, token extraction, and custom font integration (`Geist Mono`, `Instrument Serif`) occur as a post-build visual pass.
+### 1. Atomic Step Protocol
+- The build executes exactly ONE numbered step at a time from "When you say build" (Steps 1–10).
+- Multi-step execution across prompt boundaries is forbidden. A step must be committed to git, pass CI/tests, and display a verified diff before the next step begins.
+- If an instruction is ambiguous, halt and ask. Do not guess defaults or invent architectural glue.
 
-When a page needs a look and this plan is silent, render clean, functional wireframe layouts and continue the current step. There is no visual spec to finish, no lookbook, and no pause for a design pass.
+### 2. Session Hygiene & Fresh Lifecycle (Anti-Thrash Tripwire)
+- **One Step, One Session:** Every step executes in a fresh, clean CLI session. When a step is committed and verified on disk, exit the CLI. The next step boots in a brand-new turn with zero chat history.
+- **15-Turn Cap:** If a step exceeds 15 turns without completing its verification diff, terminate the session immediately. Do not attempt to debug or converse in a degraded context. Check `git status`, revert dirty partial edits, and relaunch fresh.
+- **Zero In-Memory State:** Progress is tracked strictly on disk (`git log`, passing tests, file diffs), never in LLM conversational memory.
 
-Website pages, in this order:
+### 3. Negative Constraints Precede Positive Rules
+- All models have strong priors toward standard web/SaaS boilerplate. Prompts and step executions must enforce negative constraints first: what NOT to import, what NOT to name, and what NOT to add as default values.
+- Shared pricing, splits, and schema structures are governed strictly by `OUTCOME.md` and this plan. Do not infer conventions from older packages or monorepo remnants.
 
-1. The landing page wireframe, as soon as the empty website app exists. It needs no rows, so it can sit beside steps 2 to 4. Anchors: About, Mission, Model, FAQ. Marketplace and MyStable are real routes with plain placeholders until their own steps.
-2. The marketplace and the horse listing wireframes, at step 6.
-3. MyStable, at step 8, after an account exists. It stays empty of sales until the purchase step writes one.
+### 4. Verification by Evidence (Disk & Diff Only)
+- Self-attestation is void. Statements such as "Done", "Completed", or summary checkmarks without terminal evidence are rejected.
+- To complete any step, the session must provide:
+  1. The exact file paths and line ranges modified.
+  2. The raw output of `git diff` demonstrating adherence to constraints.
+  3. The passing terminal output (exit code 0) of relevant tests, linters, or typechecks.
 
-The stack stays Next.js, React, and Tailwind. The website reads Supabase and renders pages. Checkout, the webhook, the compiler, and email stay in the engine. Marketplace, the horse page, and MyStable are plain server-rendered pages. Horse images come from the new bucket.
+### 5. Role Separation (Executor ≠ Auditor)
+- The model or session executing code changes NEVER audits its own output. Asking the builder model to "review your work" is prohibited.
+- When diff audits are required, dispatch the raw `git diff` to an independent reviewer turn/model (or founder inspection) using a strict pass/fail grading lens.
+
+### 6. Scope Fencing and Immediate Parking
+- A step cannot open side-tracks, create unapproved utility packages, or refactor previously settled files.
+- Any finding, edge case, or secondary question not strictly required to satisfy the active step is deferred immediately to the ## Parked table. No auto-expansion.
+
+### 7. Design and Asset Constraints
+- The landing page is the visual north star. There is NO separate design pass, design token gate, or lookbook.
+- Tokens (canvas, gold, type scale, system sans, Geist Mono, Instrument Serif) are transcribed once into a single theme file during the landing page build.
+- Logos copy from `evolution/engine/brand`. `DESIGN.md` in that folder stays behind.
+- Marketplace, horse listing, and MyStable reuse the established theme file. They do not introduce new tokens or palettes.
+
 
 ## Reference: sandbox/rebuild
 
