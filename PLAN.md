@@ -137,6 +137,10 @@ This plan and `OUTCOME.md` outrank all external estate instructions. Do not touc
 ### 5. Role Separation (Executor ≠ Auditor)
 - The model or session executing code changes NEVER audits its own output. Asking the builder model to "review your work" is prohibited.
 - When diff audits are required, dispatch the raw `git diff` to an independent reviewer turn/model (or founder inspection) using a strict pass/fail grading lens.
+- The designated auditor is `gemma4:31b` via Ollama Cloud. If it is unavailable, stop and ask the founder which model to use. Do not substitute another model on your own.
+- The audit runs BEFORE the commit, on the staged diff (`git diff --cached`, excluding `pnpm-lock.yaml`). A non-empty reply is required, ending strictly with `VERDICT: PASS` or `VERDICT: FAIL`. A FAIL must be fixed by the executor and re-audited. The executor never overrides a verdict; if the rubric itself is wrong, correct the rubric and re-run the audit — never self-grade.
+- The rubric evaluates one numbered requirement at a time, graded PASS/FAIL with a file:line citation. Scope-leakage checks apply only to code and configuration; prose inside `engine/OPERATIONS.md` is explicitly exempt, as that guide describes the whole product by design.
+- **Strict Citation Integrity**: The auditor must cite the exact modified line number (`path/to/file.ts:line`) in the staged diff where the behavior is implemented. Citations pointing to `file:1`, file headers, or import blocks for runtime logic are treated as hallucinated evidence and invalidate the audit. Any rubric item with a dummy citation must be graded FAIL.
 
 ### 6. Scope Fencing and Immediate Parking
 - A step cannot open side-tracks, create unapproved utility packages, or refactor previously settled files.
@@ -148,6 +152,15 @@ This plan and `OUTCOME.md` outrank all external estate instructions. Do not touc
 - Logos copy from `evolution/engine/brand`. `DESIGN.md` in that folder stays behind.
 - Marketplace, horse listing, and MyStable reuse the established theme file. They do not introduce new tokens or palettes.
 
+### 8. Standard Step Prompt Skeleton
+Applies to every remaining step (Steps 5–10). Every such step prompt handed to the Executor CLI must strictly adhere to this structure:
+
+1. **Target Working Directory**: Explicit single app boundary. The build repo is `Badders80/engine-v2`, checked out at `/home/evo/evolution/engine_v2/website`, with `engine/` and `website/` as its two apps. Name the app, never the repo root.
+2. **Strict Negative Constraints**: Explicit scope fences, banned files (`AGENTS.md`, `CLAUDE.md`), banned standalone CRUD screens, prohibition against multi-step execution.
+3. **Deliverables & Physical Invariants**: Exact schemas, column names, formulas, and data boundaries.
+4. **Local Verification Protocol**: `pnpm verify` (exit code 0, `--max-warnings=0`).
+5. **Adversarial Audit Protocol**: Staged diff (`git diff --cached -- . ':(exclude)pnpm-lock.yaml'`), Ollama Cloud model `gemma4:31b` via `$OLLAMA_API_KEY`, self-contained literal expected values, mandatory non-dummy line citations, explicit exemption for `engine/OPERATIONS.md`, requiring literal `VERDICT: PASS`.
+6. **Push & CI Gate**: Conventional commit, `git push origin main` from `/home/evo/evolution/engine_v2/website` — where `origin` is `Badders80/engine-v2`, not the sandbox planning repo — then `gh run watch --exit-status`.
 
 ## Reference: sandbox/rebuild
 
@@ -203,7 +216,7 @@ Do these in order. Stop at the end of a step if something in the outcome does no
    - Missing split returns `null`, never `'75'` or `"75%"`.
    - Stake calculation throws if `stake % step !== 0`. Required step argument, no default.
    - Refund text contract: asserts exact sentence from `OUTCOME.md § Refund` and regex fails on any day count (`/\d+\s+days?/i`).
-4. DSL page on the engine. Create, edit, and view. Horse, trainer, and owner are written from that page. They do not get their own screens. A registered horse loads from a loveracing.nz link, then the operator confirms and fills the soft slots. An unregistered horse is typed by hand and cannot be published past Coming Soon. Branding fields from the page are not stored.
+4. DSL page on the engine. Create, edit, and view. Horse, trainer, and owner are written from that page. They do not get their own screens. A registered horse loads from a loveracing.nz link, then the operator confirms and fills the soft slots. An unregistered horse is typed by hand and cannot be published past Coming Soon. Branding fields from the page are not stored. Scope is strictly `engine/`; `website/` remains untouched until Step 6.
 5. New R2 bucket configuration:
    - **Production Bucket**: `evolution-v2-horse-images`
    - **File Structure**: `{horse-slug}/{image-number}` (e.g., `lady-ketchikan/01`)
@@ -248,6 +261,7 @@ Not code, and not step 1. These block cleanup only.
 | Second owner on Supabase, Stripe, R2, Vercel, GitHub, DNS, Google, and Search Console | Account task, at the domain cutover, before the public buy path. |
 | Fuller investor profile, reservations, race-by-race table, payout engine, automated monthly charges | Later. They attach to these rows. |
 | Brand & Design Token Skinning | Visual presentation layer. Steps 1-8 run with standard unstyled Tailwind wireframes. Custom typography (Geist Mono, Instrument Serif) and palette tokens apply after core engine, data model, checkout, and compiler pass CI. |
+| Available gate on the horse side | The step 2 constraint trigger fires on `dsls` writes only. Turning a horse's `registered` off, or dropping `image_count` below three, leaves an already-Available DSL standing. Parked 2026-10-14; add the horse-side check when the horse editor is built. |
 
 ## Removed on 2026-10-13
 
