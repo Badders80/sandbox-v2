@@ -11,7 +11,7 @@ These close contradictions in the old brief. They are not new product decisions.
 1. The repo root is `/home/evo/evolution/engine_v2/website`. One private repo, two hosted apps. `DoD.md` still lists an option to put the repo at `engine_v2/` level (O7). `OUTCOME.md` closed that: do not `git init` the parent. The parent keeps `OUTCOME.md`, `CONTINUE.md`, and `DoD.md`.
 2. Do not port the old packages, the monorepo, the alias map, or the 26 MB `engine/content` registry. Soft text is three columns on the horse. Audit item A1 does not block this build.
 3. Image files are named from the slug, `01` upward, in a folder for that slug. A rename moves the folder. There is no redirect table and no slug-to-path lookup. `DoD.md` also says to key media by uuid. The outcome wins.
-4. Design tokens and brand skinning are parked out of the build critical path. Steps 1 to 8 run with functional, unstyled Tailwind utility wireframes. The visual north star is preserved in `apps/website`, but visual polish, token extraction, and custom font integration (`Geist Mono`, `Instrument Serif`) occur as a post-build visual pass.
+4. Design tokens and brand skinning stay off the build critical path, with one exception added 2026-10-14. Steps 1 to 5 ran on functional, unstyled Tailwind utility wireframes. Step 6a transcribes the tokens once into one theme file and copies the logos, because `Execution Protocol` §7 already puts token transcription in the landing-page build and the landing page is now 6a. Past that, visual polish, per-page styling, and a lookbook wait for a post-build visual pass. The north star is preserved in `website/`.
 5. Shoulder brand, family number, DNA Typed, PV, and the blank BT field are not columns and are not printed. O9 stays parked.
 6. The first slice stores the three soft columns and the race record as one jsonb blob. It does not build a second content stream for updates and highlights (DoD A6).
 7. The three finished static horses stay static pages. I Stole A Manolo stays Coming Soon. Lady Ketchikan and Mulan The Brave are the two that can become Available.
@@ -100,7 +100,7 @@ Talk to the vendors with the CLIs already logged in on this machine. No new conn
 | Vendor | What build uses | What it must not touch |
 |---|---|---|
 | GitHub | `Badders80/engine-v2` exists: `https://github.com/Badders80/engine-v2`. Empty, created 2026-10-13. Public for review, and private again before the first code commit. Local path `evolution/engine_v2/website` is not a checkout yet. The plan review copy is the public repo `Badders80/sandbox`. | `Badders80/evo_02` |
-| Supabase | A new empty project in the existing org. Email auth first. | `evo-02-prod`, `Evolution-3.0`, `evolution-content-factory` |
+| Supabase | The local stack on 544xx is the build target until cutover: `supabase start`, migrations applied locally, `supabase status` the check. The new empty project in the existing org is created and linked at the domain cutover, not before. Email auth first. | `evo-02-prod`, `Evolution-3.0`, `evolution-content-factory` |
 | Vercel | Two new projects on the new repo, one per app (`engine/`, `website/`). Previews only. | `evolution-3-0` and `www.evolutionstables.nz` |
 | Stripe | The existing Evolution Stables Limited account, test mode, through the Stripe CLI. | Live keys, and the live Mulan subscription |
 | Google | `gcloud` is already `alex@evolutionstables.nz`. Google login is the existing OAuth client plus one new redirect for the new site. The live site's redirect stays. | Repointing the live client |
@@ -148,7 +148,7 @@ This plan and `OUTCOME.md` outrank all external estate instructions. Do not touc
 
 ### 7. Design and Asset Constraints
 - The landing page is the visual north star. There is NO separate design pass, design token gate, or lookbook.
-- Tokens (canvas, gold, type scale, system sans, Geist Mono, Instrument Serif) are transcribed once into a single theme file during the landing page build.
+- Tokens (canvas, gold, type scale, system sans, Geist Mono, Instrument Serif) are transcribed once into a single theme file during the landing page build, which is 6a. The theme file is `website/src/app/globals.css`.
 - Logos copy from `evolution/engine/brand`. `DESIGN.md` in that folder stays behind.
 - Marketplace, horse listing, and MyStable reuse the established theme file. They do not introduce new tokens or palettes.
 
@@ -199,7 +199,7 @@ On step 1 the file moves to `engine/OPERATIONS.md` inside `Badders80/engine-v2`.
 Do these in order. Stop at the end of a step if something in the outcome does not fit.
 
 1. Use `Badders80/engine-v2` at `evolution/engine_v2/website`, as in "Accounts" above. Make it private before the first code commit. Move `sandbox/v2/OPERATIONS.md` to `engine/OPERATIONS.md`. Do not `git init` `evolution/engine_v2`. Do not add `CLAUDE.md` or `AGENTS.md`. Do not change `Badders80/evo_02` or its Vercel project. First commit is the two empty apps, that guide, CI that typechecks, lints, and tests, and the pre-commit / CI script `scripts/assert-no-anti-patterns.sh` that scans for and fails on any banned legacy token (`INVENTORY_UUID_BY_SLUG`, `LEGACY_SLUG_ALIASES`, `slugCandidates`, `HORSE_STILLS`, `DEFAULT_CDN_HOST`, `CONTENT_DIR`, `resolveHorseSlug`, `REFUND_WINDOW_DAYS`, `brand_dna`, `orca`).
-2. New empty Supabase project. One migration series (`001_initial_schema.sql` upward) for the rows in `OUTCOME.md`: `trainers`, `owners`, `horses`, `dsls`, `accounts`, `sales`. No copied business data. No two migrations share a numeric prefix. No slug-to-id table. Encode Tier 1 Postgres physical constraints:
+2. One migration series (`001_initial_schema.sql` upward) for the rows in `OUTCOME.md`: `trainers`, `owners`, `horses`, `dsls`, `accounts`, `sales`, applied to the local stack on 544xx. No copied business data. No two migrations share a numeric prefix. No slug-to-id table. Encode Tier 1 Postgres physical constraints:
    - `horses`: `id uuid primary key`, `microchip text unique`, `slug text unique not null`, `sire_name text`, `dam_name text`, `image_count integer not null default 0 check (image_count >= 0)`, `registered boolean not null`. Soft prose strictly limited to `about_horse`, `racing_outlook_and_pedigree`, `race_expectation` (text) and `race_record` (jsonb).
    - `dsls`: `unique (horse_id, end_date)`. `payment_model` enum (`subscription_float`, `upfront`), `close_style` enum (`fourteen_day`, `three_x_remaining`). `status` enum (`coming_soon`, `available`, `fully_allocated`, `completed`), `published boolean not null default false`.
    - `wholesale_monthly_per_percent numeric(10,2) not null check (wholesale_monthly_per_percent > 0)`.
@@ -228,7 +228,19 @@ Do these in order. Stop at the end of a step if something in the outcome does no
    Public images only, for the horses that go through this flow. `image_count` is the only image fact in the database. Private KYC and proof-of-address files stay in Supabase Storage, not R2.
    
    **Configuration**: See `/r2-config/README.md` for full setup details and access patterns.
-6. Website reads the rows. The landing page is already built, per "How the build session behaves". This step is the marketplace and the horse listing, with the search layer in "Search" above. Press, updates, and the FAQ do not live on the horse, trainer, or owner. Coming Soon is visible and cannot be bought. Available means Buy Now. Unpublished stays off the marketplace and out of the sitemap.
+6. Website. Split into two atomic steps on 2026-10-14, because 6a needs no database rows and 6b needs read policies that do not exist yet. Each is committed, gated, audited, and pushed on its own, per §1. This numbering replaces the earlier claim that the landing page was already built; it was not, and `website/src/app/page.tsx` still says the landing page lands here.
+
+   **6a. Design tokens, logos, and the landing page.** Scope is `website/` only. Transcribe the tokens once into `website/src/app/globals.css` (the Tailwind v4 theme): canvas, gold `#c39853`, the system sans for prose, `Geist Mono` for figures, `Instrument Serif` for the one italic emphasis. Copy the logos from `evolution/engine/brand`; `DESIGN.md` in that folder stays behind. Build the landing page at `/`. It reads zero rows from Postgres, so nothing here waits on a policy or on data. No design branch, no token package, no lookbook. This is the visual north star every later page reuses.
+
+   **6b. Read policies, the marketplace, the horse page, and search.** The first deliverable is migration `00009_website_read_policies.sql`, because every table is deny-by-default and an anon read returns `[]` with no error raised:
+   - `trainers`, `owners`, `horses`: `for select using (true)`
+   - `dsls`: `for select using (published = true)`
+   - `accounts`: `for select using (auth.uid() = id)`
+   - `sales`: `for select using (auth.uid() = user_id)`
+
+   Four negative constraints on `website/`: it never imports `engine/` source; it never holds a Stripe secret; it never prices and never compiles; and it never queries `horses`, `trainers`, or `owners` directly. `published` lives only on `dsls`, so the site reads `dsls` and joins outward — a direct `from('horses')` would leak unpublished and unregistered rows.
+
+   Then the marketplace, the horse page at `/marketplace/[slug]`, and the search layer in "Search" above. Coming Soon is visible and cannot be bought. Available means Buy Now. Unpublished stays off the marketplace and out of the sitemap. Press, updates, and the FAQ do not live on the horse, trainer, or owner. 6b introduces no new tokens: it reuses the 6a theme file.
 7. Compiler, against the legal authority above. Copy the PDF, the three pro-formas, and the principles note into the repo as the read-only reference set. PDS reads the horse soft text columns (`about_horse`, `racing_outlook_and_pedigree`, `race_expectation`), the trainer bio, and the DSL terms. Strictly forbid filesystem content scans or frontmatter lookups. SA reads hard facts and commercial terms, no soft prose. Promoter line on every document: Alex Baddeley, Evolution Stables Ltd. Payment default, prize freeze, and forfeiture are printed procedures. A system that runs them is not part of this outcome. The self-audit checks both documents against the principles note.
 8. Purchase, per "Buy workflow" above. Logged-in buyer. The website modal asks the engine for the PDS and SA compiled with the account name. Buyer accepts. Engine starts Stripe Identity if the account is not verified, and records the result on the account. Engine creates Checkout and returns the URL. Webhook writes the sale: stake, amount, Stripe session id, Identity id, both documents, both hashes. A later edit to the horse does not change a document already sold. Browser returns to MyStable. MyStable reads that account and that user's sales. Checkout does not create another profile. Do not import `sandbox/rebuild`.
 9. Four emails, sent by the engine, and no others. Buyer: sale written (stake, amount, link to MyStable). Buyer: KYC failed. Founder: sale succeeded. Founder: checkout or webhook failed for a reason that is ours. A card decline does not send that alert. Later monthly charges and defaults are manual.
@@ -260,7 +272,7 @@ Not code, and not step 1. These block cleanup only.
 | Observability vendor, and the email sender that replaces Gmail SMTP | Needed before the public buy path, not before the first commit. |
 | Second owner on Supabase, Stripe, R2, Vercel, GitHub, DNS, Google, and Search Console | Account task, at the domain cutover, before the public buy path. |
 | Fuller investor profile, reservations, race-by-race table, payout engine, automated monthly charges | Later. They attach to these rows. |
-| Brand & Design Token Skinning | Visual presentation layer. Steps 1-8 run with standard unstyled Tailwind wireframes. Custom typography (Geist Mono, Instrument Serif) and palette tokens apply after core engine, data model, checkout, and compiler pass CI. |
+| Brand & Design Token Skinning past 6a | The theme file, the logos, and the landing page moved into 6a on 2026-10-14. What waits is only polish past that: per-page styling, a lookbook, and any token beyond the 6a theme file. |
 | Available gate on the horse side | The step 2 constraint trigger fires on `dsls` writes only. Turning a horse's `registered` off, or dropping `image_count` below three, leaves an already-Available DSL standing. Parked 2026-10-14; add the horse-side check when the horse editor is built. |
 
 ## Removed on 2026-10-13
