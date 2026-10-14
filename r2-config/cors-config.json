@@ -1,0 +1,12 @@
+{
+  "rules": [
+    {
+      "allowedOrigins": [
+        "https://www.evolutionstables.nz",
+        "https://evolutionstables.nz"
+      ],
+      "allowedMethods": ["GET", "HEAD"],
+      "maxAgeSeconds": 86400
+    }
+  ]
+}

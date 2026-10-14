@@ -1,0 +1,9 @@
+{
+  "rules": [
+    {
+      "allowedOrigins": ["https://www.evolutionstables.nz", "https://evolutionstables.nz"],
+      "allowedMethods": ["GET"],
+      "allowedHeaders": []
+    }
+  ]
+}
