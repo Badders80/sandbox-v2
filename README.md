@@ -1,13 +1,13 @@
 # V2 working notes
 
-This folder is the plan. It is not the product, and it is not a git repo of its own.
+This folder is the plan. It is the canonical planning repository (Badders80/sandbox-v2).
 
 | Role | Path |
 |---|---|
-| Working plan | `/home/evo/sandbox/v2/PLAN.md` (this folder) |
+| Working plan | `/home/evo/sandbox-v2/PLAN.md` (this folder) |
 | Locked brief | `/home/evo/evolution/engine_v2/OUTCOME.md`, then `CONTINUE.md` |
 | Old brief, audit only | `/home/evo/evolution/engine_v2/DoD.md` |
-| Forensic background | `/home/evo/sandbox/v2/background/` |
+| Forensic background | `/home/evo/sandbox-v2/background/` |
 | Code, after the word **build** | `/home/evo/evolution/engine_v2/website` |
 
 `engine_v2/` itself is not the repo. Do not `git init` it. The three brief files stay there.
